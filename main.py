@@ -1,3 +1,4 @@
+"""Read any number of files and write a single merged and ordered file"""
 import time
 from contextlib import ExitStack
 import heapq
@@ -25,43 +26,63 @@ def merge_files(input_filenames, output_filename):
         for fp in input_files:
             fp.readline()  # Read header row, ignore for now
 
-        hm = HeapManager(input_files, output_file)
-        hm.readlines()
+        hm = HeapManager(input_files, output_file, 0)
+        hm.readwritelines()
 
 
 class HeapManager:
-    def __init__(self, input_files, output_file):
+    def __init__(self, input_files, output_file, max_interval):
         self.input_files = input_files
         self.output_file = output_file
+        self.max_interval = max_interval
         self.heap = []
-        self.file_line_count = dict((f.fileno(), 0) for f in input_files)
+        self.file_heaps = dict((f.fileno(), []) for f in input_files)
 
-        # TODO(rheineke): Handle files of different lengths
         # Initialize heap
         for fp in self.input_files:
+            file_heap = self.file_heaps[fp.fileno()]
+
+            # Initialize file's heap
             line = fp.readline()
             if not len(line):
                 continue
-            line = line.split(',')
-            data = OrderedData(int(line[0]), line[1:], fp)
 
-            heapq.heappush(self.heap, data)
-            self.file_line_count[fp.fileno()] += 1
+            while len(line):
+                line = line.split(',')
+                timestamp = int(line[0])
+                data = OrderedData(timestamp, line[1:], fp)
 
-    def readlines(self):
+                heapq.heappush(self.heap, data)
+                heapq.heappush(file_heap, timestamp)
+
+                if timestamp < file_heap[0] + self.max_interval:
+                    break
+
+                line = fp.readline()
+
+    def readwritelines(self):
         while len(self.heap):
-            ordered_data = heapq.heappop(self.heap)
+            lst_data = heapq.heappop(self.heap)
+            fp = lst_data.fp
+            file_heap = self.file_heaps[fp.fileno()]
+            heapq.heappop(file_heap)
 
             # Push next line if available
-            fp = ordered_data.fp
-            next_line = fp.readline()
-            if len(next_line):
-                next_line = next_line.split(',')
-                next_data = OrderedData(int(next_line[0]), next_line[1:], fp)
-                heapq.heappush(self.heap, next_data)
-            self.file_line_count[ordered_data.fp.fileno()] -= 1
+            line = fp.readline()
+            while len(line):
+                line = line.split(',')
+                timestamp = int(line[0])
+                data = OrderedData(timestamp, line[1:], fp)
 
-            self.output_file.write(str(ordered_data))
+                heapq.heappush(self.heap, data)
+                heapq.heappush(file_heap, timestamp)
+
+                if timestamp < file_heap[0] + self.max_interval:
+                    break
+
+                line = fp.readline()
+
+            self.output_file.write(str(lst_data))
 
 
 class OrderedData:
