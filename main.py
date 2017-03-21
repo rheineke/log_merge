@@ -43,22 +43,7 @@ class HeapManager:
             file_heap = self.file_heaps[fp.fileno()]
 
             # Initialize file's heap
-            line = fp.readline()
-            if not len(line):
-                continue
-
-            while len(line):
-                line = line.split(',')
-                timestamp = int(line[0])
-                data = OrderedData(timestamp, line[1:], fp)
-
-                heapq.heappush(self.heap, data)
-                heapq.heappush(file_heap, timestamp)
-
-                if timestamp < file_heap[0] + self.max_interval:
-                    break
-
-                line = fp.readline()
+            self._readlines(fp, file_heap)
 
     def readwritelines(self):
         while len(self.heap):
@@ -67,22 +52,25 @@ class HeapManager:
             file_heap = self.file_heaps[fp.fileno()]
             heapq.heappop(file_heap)
 
-            # Push next line if available
-            line = fp.readline()
-            while len(line):
-                line = line.split(',')
-                timestamp = int(line[0])
-                data = OrderedData(timestamp, line[1:], fp)
-
-                heapq.heappush(self.heap, data)
-                heapq.heappush(file_heap, timestamp)
-
-                if timestamp < file_heap[0] + self.max_interval:
-                    break
-
-                line = fp.readline()
+            self._readlines(fp, file_heap)
 
             self.output_file.write(str(lst_data))
+
+    def _readlines(self, fp, file_heap):
+        line = fp.readline()
+        # Push next line to heap if available
+        while len(line):
+            line = line.split(',')
+            timestamp = int(line[0])
+            data = OrderedData(timestamp, line[1:], fp)
+
+            heapq.heappush(self.heap, data)
+            heapq.heappush(file_heap, timestamp)
+
+            if timestamp < file_heap[0] + self.max_interval:
+                break
+
+            line = fp.readline()
 
 
 class OrderedData:
