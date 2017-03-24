@@ -45,6 +45,11 @@ class HeapManager:
             # Initialize file's heap
             self._readlines(fp, file_heap)
 
+        # Initialize output file header
+        # TODO(rheineke): Improve this
+        self.output_file.write('timestamp,a\n')
+
+
     def readwritelines(self):
         while len(self.heap):
             lst_data = heapq.heappop(self.heap)
@@ -103,13 +108,14 @@ def _input_data_frame(n, sort=False):
     rel_time = np.random.randint(low=low, high=high, size=n)
     if sort:
         rel_time.sort()
+    index = pd.Index(data=rel_time, name='timestamp')
 
     # Random data
     data = {
         'a': list(range(n))
     }
 
-    return pd.DataFrame(data=data, index=rel_time)
+    return pd.DataFrame(data=data, index=index)
 
 
 if __name__ == '__main__':
