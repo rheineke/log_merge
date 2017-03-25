@@ -3,14 +3,12 @@ import time
 from contextlib import ExitStack
 import heapq
 
+import fastparquet
 import numpy as np
 import pandas as pd
 
 
 def merge_files(input_filenames, output_filename):
-    # Initialize the heap
-    heap = heapq.heapify([])
-
     # TODO: Consider opening with csv.DictReader()
     # TODO: Explore ways to open a binary file seamlessly with csv package
     with ExitStack() as stack:
@@ -23,20 +21,22 @@ def merge_files(input_filenames, output_filename):
         # All opened files will automatically be closed at the end of
         # the with statement, even if attempts to open files later
         # in the list raise an exception
-        for fp in input_files:
-            fp.readline()  # Read header row, ignore for now
 
-        hm = HeapManager(input_files, output_file, 0)
+        hm = HeapManager(input_files, output_file.write, 0)
         hm.readwritelines()
 
 
 class HeapManager:
-    def __init__(self, input_files, output_file, max_interval):
+    def __init__(self, input_files, callback_func, max_interval):
         self.input_files = input_files
-        self.output_file = output_file
+        self.callback_func = callback_func
         self.max_interval = max_interval
         self.heap = []
         self.file_heaps = dict((f.fileno(), []) for f in input_files)
+
+        header_line = '\n'
+        for fp in input_files:
+            header_line = fp.readline()  # Read header row
 
         # Initialize heap
         for fp in self.input_files:
@@ -47,8 +47,7 @@ class HeapManager:
 
         # Initialize output file header
         # TODO(rheineke): Improve this
-        self.output_file.write('timestamp,a\n')
-
+        self.callback_func(header_line)
 
     def readwritelines(self):
         while len(self.heap):
@@ -59,7 +58,7 @@ class HeapManager:
 
             self._readlines(fp, file_heap)
 
-            self.output_file.write(str(lst_data))
+            self.callback_func(str(lst_data))
 
     def _readlines(self, fp, file_heap):
         line = fp.readline()
