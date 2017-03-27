@@ -19,7 +19,8 @@ class FileMerge(unittest.TestCase):
             self.assertTrue(input_filename)
 
         output_filename = 'output/bar.csv'
-        merge_files(input_filenames, output_filename)
+        with open(output_filename, 'w') as output_fp:
+            merge_files(input_filenames, output_fp.write)
 
         self.assertTrue(output_filename)
 
