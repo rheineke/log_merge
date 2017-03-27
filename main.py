@@ -1,4 +1,5 @@
 """Read any number of files and write a single merged and ordered file"""
+import sys
 import time
 
 from merge import merge_files
@@ -14,14 +15,21 @@ def generate_input_files(input_filenames, n, sort=True):
         df.to_csv(i_fn)
 
 
-def _input_data_frame(n, sort=False):
+def _input_data_frame(n, max_interval=0):
     # Timestamp (int) index
     now = int(time.time())
     low = now - 1000
     high = now
     rel_time = np.random.randint(low=low, high=high, size=n)
-    if sort:
-        rel_time.sort()
+    rel_time.sort()
+
+    # Generate jitter in output: swap some times if < max_interval
+    time_diff = np.diff(rel_time)
+    time_diff = np.insert(time_diff, [0], sys.maxsize)
+    diff_lt_lbl = time_diff < max_interval
+    # TODO(rheineke): If true, calculate rand
+    # TODO(rheineke): If rand > 0.5, swap with previous index
+
     index = pd.Index(data=rel_time, name='timestamp')
 
     # Random data
