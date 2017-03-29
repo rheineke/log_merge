@@ -2,20 +2,18 @@
 import sys
 import time
 
-from merge import merge_files
-
 import fastparquet
 import numpy as np
 import pandas as pd
 
 
-def generate_input_files(input_filenames, n, sort=True):
+def generate_input_files(input_filenames, n, max_interval=0):
     for i_fn in input_filenames:
-        df = _input_data_frame(n, sort=sort)
+        df = _input_data_frame(n, max_interval=max_interval)
         df.to_csv(i_fn)
 
 
-def _input_data_frame(n, max_interval=0):
+def _input_data_frame(n, max_interval):
     # Timestamp (int) index
     now = int(time.time())
     low = now - 1000
@@ -52,7 +50,9 @@ if __name__ == '__main__':
         'input/b.csv',
         'input/c.csv',
     ]
-    generate_input_files(input_filenames, n=15, max_interval=15)
-    output_filename = 'output/bar.csv'
-    with open(output_filename, 'w') as output_fp:
-        merge_files(input_filenames, output_fp.write)
+    # generate_input_files(input_filenames, n=15, max_interval=15)
+    # output_filename = 'output/bar.csv'
+    # with open(output_filename, 'w') as output_fp:
+    #     merge_files(input_filenames, output_fp.write)
+
+    df = _input_data_frame(100, max_interval=10)
