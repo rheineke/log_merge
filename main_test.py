@@ -2,6 +2,7 @@ import csv
 import unittest
 
 import numpy as np
+import pandas as pd
 
 from merge import merge_files
 from main import generate_input_files, _input_data_frame
@@ -15,10 +16,11 @@ class InputFile(unittest.TestCase):
         # Not guaranteed to be false
         # self.assertFalse(df.index.is_monotonic_increasing)
 
-        sorted_df = df.sort_index()
-        diff_index = df.index - sorted_df.index
-        self.assertLessEqual(diff_index.max(), max_interval)
-        self.assertGreaterEqual(diff_index.min(), -max_interval)
+        srs = pd.Series(df.index)
+        diff_srs = srs.diff()
+        # self.assertLessEqual(diff_srs.max(), max_interval)
+        msg = '{}\n{}'.format(srs, diff_srs)
+        self.assertGreaterEqual(diff_srs.min(), -max_interval, msg=msg)
 
 
 class FileMerge(unittest.TestCase):
