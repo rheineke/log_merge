@@ -10,9 +10,9 @@ from main import generate_input_files, _input_data_frame
 
 class InputFile(unittest.TestCase):
     def test_ordered_input_file(self):
-        n = 100
         max_interval = 10
-        df = _input_data_frame(n, max_interval=max_interval)
+        kwargs = dict(max_interval=max_interval, relative_time_period=1000)
+        df = _input_data_frame(100, **kwargs)
         self.assertFalse(df.index.is_monotonic_decreasing)
         # Not guaranteed to be false
         # self.assertFalse(df.index.is_monotonic_increasing)
