@@ -10,16 +10,19 @@ from main import generate_input_files, _input_data_frame
 
 class InputFile(unittest.TestCase):
     def test_ordered_input_file(self):
+        n = 100
         max_interval = 10
-        df = _input_data_frame(100, max_interval=max_interval)
+        df = _input_data_frame(n, max_interval=max_interval)
         self.assertFalse(df.index.is_monotonic_decreasing)
         # Not guaranteed to be false
         # self.assertFalse(df.index.is_monotonic_increasing)
 
-        srs = pd.Series(df.index)
+        srs = pd.Series(df.index, name='timestamp')
         diff_srs = srs.diff()
         # self.assertLessEqual(diff_srs.max(), max_interval)
-        msg = '{}\n{}'.format(srs, diff_srs)
+        error_df = srs.to_frame().join(diff_srs, rsuffix='_diff')
+        fail_lbl = error_df['timestamp_diff'] < -max_interval
+        msg = '{}'.format(error_df.loc[fail_lbl])
         self.assertGreaterEqual(diff_srs.min(), -max_interval, msg=msg)
 
 

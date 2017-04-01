@@ -14,27 +14,36 @@ def generate_input_files(input_filenames, n, max_interval=0):
 
 
 def _input_data_frame(n, max_interval):
+    ts = 'timestamp'
+
     # Timestamp (int) index
     now = int(time.time())
     low = now - 1000
     high = now
     rel_time = np.random.randint(low=low, high=high, size=n)
     rel_time.sort()
+    time_srs = pd.Series(data=rel_time, name=ts)
+    sorted_time_srs = time_srs.sort_values()
 
     # Generate jitter in output: swap some times if < max_interval
-    time_diff = np.diff(rel_time)
-    time_diff = np.insert(time_diff, [0], sys.maxsize)
+    # Do not swap consecutive pairs
+    one_diff_srs = sorted_time_srs.diff(periods=1)
+    two_diff_srs = sorted_time_srs.diff(periods=2)
     # Time difference less than max_interval
-    diff_lt_lbl = time_diff < max_interval
+    diff_lt_lbl = (one_diff_srs < max_interval) & (two_diff_srs < max_interval)
+
+    # Do not swap consecutive pairs
     swap_lbl = np.random.rand(n) >= 0.5
+    lst_nonswap_lbl = ~np.roll(swap_lbl, shift=1)
+    nonconsec_swap_lbl = swap_lbl & lst_nonswap_lbl
     # Randomly choose swaps among time difference less than max_interval
-    swap_diff_lt_lbl = swap_lbl & diff_lt_lbl
+    swap_diff_lt_lbl = nonconsec_swap_lbl & diff_lt_lbl
     # Swap
     for i, swap in enumerate(swap_diff_lt_lbl):
         if swap:
-            rel_time[i-1], rel_time[i] = rel_time[i], rel_time[i-1]
+            sorted_time_srs[i-1], sorted_time_srs[i] = sorted_time_srs[i], sorted_time_srs[i-1]
 
-    index = pd.Index(data=rel_time, name='timestamp')
+    index = pd.Index(data=sorted_time_srs.values, name=ts)
 
     # Random data
     data = {
