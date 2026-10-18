@@ -1,5 +1,7 @@
 import csv
+import tempfile
 import unittest
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -28,17 +30,14 @@ class InputFile(unittest.TestCase):
 
 class FileMerge(unittest.TestCase):
     def test_ordered_input_files(self):
-        input_filenames = [
-            'input/a.csv',
-            'input/b.csv',
-            'input/c.csv',
-        ]
+        tmp = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        input_filenames = [str(tmp / name) for name in ('a.csv', 'b.csv', 'c.csv')]
         generate_input_files(input_filenames, 15)
 
         for input_filename in input_filenames:
             self.assertTrue(input_filename)
 
-        output_filename = 'output/bar.csv'
+        output_filename = tmp / 'bar.csv'
         with open(output_filename, 'w') as output_fp:
             merge_files(input_filenames, output_fp.write)
 
