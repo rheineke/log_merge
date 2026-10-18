@@ -6,8 +6,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from main import _input_data_frame, generate_input_files
 from merge import merge_files
-from main import generate_input_files, _input_data_frame
 
 
 class InputFile(unittest.TestCase):
@@ -19,26 +19,26 @@ class InputFile(unittest.TestCase):
         # Not guaranteed to be false
         # self.assertFalse(df.index.is_monotonic_increasing)
 
-        srs = pd.Series(df.index, name='timestamp')
+        srs = pd.Series(df.index, name="timestamp")
         diff_srs = srs.diff()
         # self.assertLessEqual(diff_srs.max(), max_interval)
-        error_df = srs.to_frame().join(diff_srs, rsuffix='_diff')
-        fail_lbl = error_df['timestamp_diff'] < -max_interval
-        msg = '{}'.format(error_df.loc[fail_lbl])
+        error_df = srs.to_frame().join(diff_srs, rsuffix="_diff")
+        fail_lbl = error_df["timestamp_diff"] < -max_interval
+        msg = f"{error_df.loc[fail_lbl]}"
         self.assertGreaterEqual(diff_srs.min(), -max_interval, msg=msg)
 
 
 class FileMerge(unittest.TestCase):
     def test_ordered_input_files(self):
         tmp = Path(self.enterContext(tempfile.TemporaryDirectory()))
-        input_filenames = [str(tmp / name) for name in ('a.csv', 'b.csv', 'c.csv')]
+        input_filenames = [str(tmp / name) for name in ("a.csv", "b.csv", "c.csv")]
         generate_input_files(input_filenames, 15)
 
         for input_filename in input_filenames:
             self.assertTrue(input_filename)
 
-        output_filename = tmp / 'bar.csv'
-        with open(output_filename, 'w') as output_fp:
+        output_filename = tmp / "bar.csv"
+        with open(output_filename, "w") as output_fp:
             merge_files(input_filenames, output_fp.write)
 
         self.assertTrue(output_filename)
@@ -46,11 +46,11 @@ class FileMerge(unittest.TestCase):
 
 def file_sorted_by_timestamp(filename):
     lst_timestamp = -np.inf
-    with open(filename, 'r') as fp:
+    with open(filename) as fp:
         reader = csv.DictReader(fp)
         for row in reader:
-            if lst_timestamp > row['timestamp']:
+            if lst_timestamp > row["timestamp"]:
                 return False
-            lst_timestamp = row['timestamp']
+            lst_timestamp = row["timestamp"]
 
     return True
