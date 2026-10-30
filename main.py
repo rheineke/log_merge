@@ -1,16 +1,14 @@
 """Read any number of files and write a single merged and ordered file"""
+
 import time
 
-import fastparquet
 import numpy as np
 import pandas as pd
 
 
 def generate_input_files(input_filenames, n, max_interval=0):
     for i_fn in input_filenames:
-        df = _input_data_frame(n,
-                               max_interval=max_interval,
-                               relative_time_period=1000)
+        df = _input_data_frame(n, max_interval=max_interval, relative_time_period=1000)
         df.to_csv(i_fn)
 
 
@@ -18,13 +16,13 @@ def _input_data_frame(n, max_interval, relative_time_period):
     """
 
     :param n: Number of timestamp entries
-    :param max_interval: Maximum time difference between non-monotonically 
+    :param max_interval: Maximum time difference between non-monotonically
     increasing entries
-    :param relative_time_period: Maximum time period between first and last 
+    :param relative_time_period: Maximum time period between first and last
     timestamp entries
-    :return: 
+    :return:
     """
-    ts = 'timestamp'
+    ts = "timestamp"
 
     # Timestamp (int) index
     now = int(time.time())
@@ -52,23 +50,21 @@ def _input_data_frame(n, max_interval, relative_time_period):
     # Swap
     for i, swap in enumerate(swap_diff_lt_lbl):
         if swap:
-            rel_time[i-1], rel_time[i] = rel_time[i], rel_time[i-1]
+            rel_time[i - 1], rel_time[i] = rel_time[i], rel_time[i - 1]
 
     index = pd.Index(data=rel_time, name=ts)
 
     # Random data
-    data = {
-        'a': list(range(n))
-    }
+    data = {"a": list(range(n))}
 
     return pd.DataFrame(data=data, index=index)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     input_filenames = [
-        'input/a.csv',
-        'input/b.csv',
-        'input/c.csv',
+        "input/a.csv",
+        "input/b.csv",
+        "input/c.csv",
     ]
     # generate_input_files(input_filenames, n=15, max_interval=15)
     # output_filename = 'output/bar.csv'

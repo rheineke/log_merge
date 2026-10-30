@@ -4,7 +4,7 @@ from contextlib import ExitStack
 
 def merge_files(input_filenames, callback_func):
     with ExitStack() as stack:
-        input_files = [stack.enter_context(open(fname, 'r')) for fname in input_filenames]
+        input_files = [stack.enter_context(open(fname)) for fname in input_filenames]
 
         # All opened files will automatically be closed at the end of
         # the with statement, even if attempts to open files later
@@ -17,7 +17,7 @@ def _merge_files(input_files, callback_func, max_interval=0):
     heap = []
     file_heaps = dict((f.fileno(), []) for f in input_files)
 
-    header_line = '\n'
+    header_line = "\n"
     for fp in input_files:
         header_line = fp.readline()  # Read header row
 
@@ -44,7 +44,7 @@ def _file_readlines(heap, fp, file_heap, max_interval):
     line = fp.readline()
     # Push next line to heap if available
     while len(line):
-        line = line.split(',')
+        line = line.split(",")
         timestamp = int(line[0])
         data = OrderedData(timestamp, line[1:], fp)
 
@@ -70,14 +70,15 @@ class OrderedData:
         return self.timestamp < other.timestamp
 
     def __str__(self):
-        return ','.join([str(self.timestamp)] + self.data)
+        return ",".join([str(self.timestamp)] + self.data)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     input_filenames = [
-        'input/a.csv',
-        'input/b.csv',
-        'input/c.csv',
+        "input/a.csv",
+        "input/b.csv",
+        "input/c.csv",
     ]
-    output_filename = 'output/bar.csv'
-    with open(output_filename, 'w') as output_fp:
+    output_filename = "output/bar.csv"
+    with open(output_filename, "w") as output_fp:
         merge_files(input_filenames, output_fp.write)
